@@ -8,16 +8,23 @@ import com.thinkphp.thinkphpgui.util.*;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
-import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ThinkphpGUIController {
+    //主UI元素定义
     @FXML
     private TextField url_txt, file_txt, cmd_txt;
     @FXML
@@ -28,11 +35,93 @@ public class ThinkphpGUIController {
     private ComboBox<String> comboBox;
     List<String> list_url = new ArrayList<>();
     Alert alert = new Alert(Alert.AlertType.INFORMATION);
+    public static Map<String, String> currentProxy = new HashMap<>();
 
     public void initialize() {
         comboBox.setValue("ALL");
         comboBox.getItems().add("ALL");
         comboBox.getItems().addAll(ExpList.get_exp());
+    }
+
+    @FXML
+    private void proxy_set() {
+        final Alert inputDialog = new Alert(Alert.AlertType.NONE);
+        inputDialog.setResizable(true);
+        final Window window = inputDialog.getDialogPane().getScene().getWindow();
+        window.setOnCloseRequest(e -> window.hide());
+
+        ToggleGroup statusGroup = new ToggleGroup();
+        RadioButton enableRadio = new RadioButton("启用");
+        RadioButton disableRadio = new RadioButton("禁用");
+        enableRadio.setToggleGroup(statusGroup);
+        disableRadio.setToggleGroup(statusGroup);
+        HBox statusHbox = new HBox(10.0D, enableRadio, disableRadio);
+        GridPane proxyGridPane = new GridPane();
+        proxyGridPane.setVgap(15.0D);
+        proxyGridPane.setPadding(new Insets(20.0D, 20.0D, 0.0D, 10.0D));
+        Label typeLabel = new Label("类型：");
+        Label type = new Label("HTTP");
+        Label IPLabel = new Label("IP地址：");
+        TextField IPText = new TextField();
+        Label PortLabel = new Label("端口：");
+        TextField PortText = new TextField();
+        Label userNameLabel = new Label("用户名：");
+        TextField userNameText = new TextField();
+        Label passwordLabel = new Label("密码：");
+        TextField passwordText = new TextField();
+        Button cancelBtn = new Button("取消");
+        Button saveBtn = new Button("保存");
+        saveBtn.setDefaultButton(true);
+
+        // Set values if currentProxy is not null
+        IPText.setText( currentProxy.getOrDefault("ipAddress", ""));
+        PortText.setText(currentProxy.getOrDefault("port", ""));
+        userNameText.setText(currentProxy.getOrDefault("username", ""));
+        passwordText.setText(currentProxy.getOrDefault("password", ""));
+        enableRadio.setSelected(currentProxy.get("proxy") != null && currentProxy.get("proxy").equals("Y"));
+
+        saveBtn.setOnAction(e -> {
+            if (disableRadio.isSelected()) {
+                currentProxy.put("proxy", "N");
+                Tools.removeGlobalProxy();
+            } else {
+                String ipAddress = IPText.getText().trim();
+                String port = PortText.getText().trim();
+                String username = userNameText.getText().trim();
+                String password = passwordText.getText().trim();
+                if (!username.isEmpty()) {
+                    Tools.setGlobalProxy(ipAddress, port, username, password);
+                } else {
+                    Tools.setGlobalProxy(ipAddress, port);
+                }
+                currentProxy.put("ipAddress", ipAddress);
+                currentProxy.put("port", port);
+                currentProxy.put("username", username);
+                currentProxy.put("password", password);
+                currentProxy.put("proxy", "Y");
+            }
+            inputDialog.getDialogPane().getScene().getWindow().hide();
+        });
+
+        cancelBtn.setOnAction(e -> inputDialog.getDialogPane().getScene().getWindow().hide());
+
+        proxyGridPane.add(statusHbox, 1, 0);
+        proxyGridPane.add(typeLabel, 0, 1);
+        proxyGridPane.add(type, 1, 1);
+        proxyGridPane.add(IPLabel, 0, 2);
+        proxyGridPane.add(IPText, 1, 2);
+        proxyGridPane.add(PortLabel, 0, 3);
+        proxyGridPane.add(PortText, 1, 3);
+        proxyGridPane.add(userNameLabel, 0, 4);
+        proxyGridPane.add(userNameText, 1, 4);
+        proxyGridPane.add(passwordLabel, 0, 5);
+        proxyGridPane.add(passwordText, 1, 5);
+        HBox buttonBox = new HBox(20.0D, cancelBtn, saveBtn);
+        buttonBox.setAlignment(Pos.CENTER);
+        GridPane.setColumnSpan(buttonBox, 2);
+        proxyGridPane.add(buttonBox, 0, 6);
+        inputDialog.getDialogPane().setContent(proxyGridPane);
+        inputDialog.showAndWait();
     }
 
     @FXML
@@ -65,7 +154,10 @@ public class ThinkphpGUIController {
         String res;
 
         if (version.startsWith("ALL")) {
-            JOptionPane.showMessageDialog(null, "请选择漏洞对应版本!", "信息", JOptionPane.WARNING_MESSAGE);
+            alert.setTitle("提示:");
+            alert.setHeaderText("信息");
+            alert.setContentText("请选择漏洞对应版本!");
+            alert.showAndWait();
         } else {
             BasePayload bp = Tools.getPayload(version);
             Result vul = bp.getShell(url);

@@ -25,7 +25,7 @@
                     <menus>
                         <Menu mnemonicParsing="false" text="配置">
                             <items>
-                                <MenuItem mnemonicParsing="false" text="常规配置" />
+                                <MenuItem mnemonicParsing="false" onAction="#proxy_set" text="代理配置" />
                             </items>
                         </Menu>
                         <Menu mnemonicParsing="false" text="关于">

@@ -6,6 +6,7 @@ import java.util.List;
 public class ExpList {
     public static List<String> get_exp() {
         List<String> list = new ArrayList<>();
+        list.add("ThinkPHP 2 RCE");
         list.add("ThinkPHP 5.0 RCE");
         list.add("ThinkPHP 5.0.10 RCE");
         list.add("ThinkPHP 5.0.22/5.1.29 RCE");

@@ -1,17 +1,19 @@
 package com.thinkphp.thinkphpgui.util;
 
 import com.thinkphp.thinkphpgui.common.BasePayload;
+import com.thinkphp.thinkphpgui.common.ProxyAuthenticator;
 import com.thinkphp.thinkphpgui.exploit.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.net.*;
 import java.util.*;
-
 
 public class Tools {
     private static final Map<String, BasePayload> payloadMap = new HashMap<>();
 
     static {
+        payloadMap.put("ThinkPHP 2 RCE", new tp2_rce());
         payloadMap.put("ThinkPHP 5.0 RCE", new tp50());
         payloadMap.put("ThinkPHP 5.0.10 RCE", new tp5010());
         payloadMap.put("ThinkPHP 5.0.22/5.1.29 RCE", new tp5022_5129());
@@ -80,6 +82,32 @@ public class Tools {
         }
 
         return sb.toString();
+    }
+
+    public static void setGlobalProxy(String proxyHost, String proxyPort) {
+        // 设置 HTTP 代理
+        System.setProperty("proxySet", "true");
+        System.setProperty("http.proxyHost", proxyHost);
+        System.setProperty("http.proxyPort", proxyPort);
+    }
+
+    public static void setGlobalProxy(String proxyHost, String proxyPort, String proxyUser, String proxyPass) {
+        // 设置 HTTP 代理
+        System.setProperty("proxySet", "true");
+        System.setProperty("http.proxyHost", proxyHost);
+        System.setProperty("http.proxyPort", proxyPort);
+        System.setProperty("http.proxyUserName", proxyUser);
+        System.setProperty("http.proxyPassword", proxyPass);
+        Authenticator.setDefault(new ProxyAuthenticator(proxyUser, proxyPass));
+    }
+
+    public static void removeGlobalProxy() {
+        System.setProperty("proxySet", "false");
+        System.clearProperty("http.proxyHost");
+        System.clearProperty("http.proxyPort");
+
+        Authenticator.setDefault(null);
+        ProxySelector.setDefault(ProxySelector.getDefault());
     }
 
 }
